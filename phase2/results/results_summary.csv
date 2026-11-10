@@ -1,0 +1,14 @@
+protocol,model,postproc,frame_auroc_mean,frame_auroc_std,frame_ap_mean,frame_ap_std,frame_f1_mean,frame_f1_std,event_precision_mean,event_precision_std,event_recall_mean,event_recall_std,event_f1_mean,event_f1_std
+grouped,crnn,eventF1_tuned,0.9830,0.0074,0.8876,0.0265,0.7955,0.0342,0.8359,0.0359,0.6012,0.0387,0.6985,0.0289
+grouped,crnn,frameF1_thr,0.9830,0.0074,0.8876,0.0265,0.7991,0.0362,0.8147,0.0176,0.6158,0.0401,0.7007,0.0267
+grouped,crnn_yamnet,eventF1_tuned,0.9777,0.0074,0.8723,0.0195,0.7840,0.0185,0.8028,0.0414,0.6117,0.0366,0.6941,0.0369
+grouped,crnn_yamnet,frameF1_thr,0.9777,0.0074,0.8723,0.0195,0.7781,0.0257,0.8121,0.0552,0.6084,0.0576,0.6929,0.0347
+grouped,yamnet_probe,eventF1_tuned,0.8571,0.0077,0.4816,0.0195,0.2821,0.0189,0.5755,0.0290,0.2163,0.0128,0.3140,0.0131
+grouped,yamnet_probe,frameF1_thr,0.8571,0.0077,0.4816,0.0195,0.4586,0.0228,0.6731,0.0399,0.1000,0.0080,0.1741,0.0123
+official,crnn,eventF1_tuned,0.9880,,0.8882,,0.7947,,0.8250,,0.6172,,0.7062,
+official,crnn,frameF1_thr,0.9880,,0.8882,,0.7947,,0.8250,,0.6172,,0.7062,
+official,crnn_yamnet,eventF1_tuned,0.9857,,0.8816,,0.7967,,0.8674,,0.6015,,0.7104,
+official,crnn_yamnet,frameF1_thr,0.9857,,0.8816,,0.7981,,0.8120,,0.6156,,0.7003,
+official,yamnet_probe,eventF1_tuned,0.8568,,0.4277,,0.2870,,0.5146,,0.2477,,0.3345,
+official,yamnet_probe,frameF1_thr,0.8568,,0.4277,,0.4279,,0.6505,,0.1110,,0.1897,
+# grouped = 5-fold GroupKFold by recording prefix (SD across folds); official = authors' split (single run). Seed 0, 20 epochs, CPU.

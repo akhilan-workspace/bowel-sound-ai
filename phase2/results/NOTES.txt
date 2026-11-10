@@ -1,0 +1,46 @@
+AI in Medicine (MD5001) - Bowel-sound detection project
+Phase 2: pretrained audio model (YAMNet) vs CRNN vs fusion, plus recall-oriented post-processing
+Run: Kaggle notebook akhilanskmd24b001/notebook98cfb36f44, version 2, CPU, 372 min, finished 24 Oct 2026
+Settings: --epochs 20 --seeds 1 (to fit Kaggle's CPU time limit). Same splits as phase 1.
+
+PRETRAINED MODEL
+Google YAMNet (MobileNet-v1 trained on AudioSet), attached from Kaggle Models (google/yamnet, TF2, v1); no internet needed.
+YAMNet gives one 1024-d embedding per 0.96 s window (0.48 s hop). To match 10 ms labels it was run on 12 copies of
+each clip shifted by 40 ms (one embedding every 40 ms), then linearly interpolated to 10 ms frames.
+
+MODELS
+yamnet_probe : frozen YAMNet embeddings -> small BiGRU head (pretrained features only)
+crnn         : phase-1 CRNN on log-mel spectrogram (re-trained here, 20 epochs)
+crnn_yamnet  : CRNN whose recurrent layer also receives the YAMNet embeddings (fusion)
+Each scored with (a) threshold maximising frame F1, (b) threshold + median filter + minimum event length tuned for
+event F1. All tuning on the inner validation split of TRAINING data only.
+
+KEY RESULTS - grouped 5-fold by recording (leak-free), mean +/- SD across folds
+                                Frame F1        Event P   Event R   Event F1        AUROC
+CRNN          frame-thr         0.799 +/- 0.036 0.815     0.616     0.701 +/- 0.027 0.983
+CRNN          event-tuned       0.796 +/- 0.034 0.836     0.601     0.699 +/- 0.029 0.983
+CRNN+YAMNet   frame-thr         0.778 +/- 0.026 0.812     0.608     0.693 +/- 0.035 0.978
+CRNN+YAMNet   event-tuned       0.784 +/- 0.019 0.803     0.612     0.694 +/- 0.037 0.978
+YAMNet probe  frame-thr         0.459 +/- 0.023 0.673     0.100     0.174 +/- 0.012 0.857
+YAMNet probe  event-tuned       0.282 +/- 0.019 0.576     0.216     0.314 +/- 0.013 0.857
+(Official split gives the same ranking: CRNN 0.706, CRNN+YAMNet 0.700-0.710, YAMNet probe 0.19-0.33 event F1.)
+
+FINDINGS
+1. The general-purpose pretrained model does NOT transfer well to bowel-sound detection: YAMNet features alone reach
+   AUROC 0.86 but event F1 only 0.17-0.31. Likely reasons: bowel sounds last ~20-35 ms while YAMNet summarises ~1 s
+   windows, and AudioSet contains almost no body/contact-microphone sounds.
+2. Adding YAMNet features to the CRNN gives no gain (event F1 0.694 vs 0.701, within fold SD) - the task-specific
+   log-mel CRNN already captures what is needed.
+3. Event-oriented post-processing did not raise CRNN recall; it helps only the weak YAMNet probe (event F1 0.17 -> 0.31).
+   Recall (~0.60-0.62) remains the main limitation and is consistent across folds.
+4. The 20-epoch CRNN reproduces phase 1 (30 epochs, 2 seeds): grouped event F1 0.701 vs 0.703.
+
+LIMITATIONS
+Single seed; only one pretrained model (YAMNet). Models with finer time resolution (e.g. PANNs, BEATs) need internet
+to download (Kaggle phone verification). No subject IDs in the dataset (grouping by recording prefix).
+
+FILES
+results_all.csv     every model x post-processing x split
+results_summary.csv mean/SD table
+run_log.txt         full training log
+train_phase2.py     exact code

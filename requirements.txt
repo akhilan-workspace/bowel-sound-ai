@@ -1,0 +1,11 @@
+numpy
+pandas
+scipy
+scikit-learn
+librosa
+soundfile
+lightgbm
+torch
+transformers      # phase 3 (HuBERT)
+tensorflow        # phase 2 only (YAMNet)
+matplotlib        # figures

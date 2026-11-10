@@ -1,0 +1,45 @@
+AI in Medicine (MD5001) - Bowel-sound detection project
+Phase 1: classical vs deep baseline, leakage-controlled evaluation
+Run: Kaggle notebook akhilanskmd24b001/notebook98cfb36f44, CPU, 584 min, finished 21 Oct 2026
+
+DATA
+Kaggle "Bowel sounds" (robertnowak/bowel-sounds; Ficek et al., Sensors 2021, doi:10.3390/s21227602; CC BY-NC 4.0)
+1606 two-second clips (44.1 kHz), 427 recording prefixes, 6413 expert-annotated bowel-sound events.
+Task: detect bowel sound in each 10 ms frame (positive frame rate 9.3%), plus event-level matching.
+
+FEATURES / MODELS
+64-band log-mel spectrogram at 8 kHz, 10 ms hop.
+LightGBM: per-frame features (mel, delta, +/-50 ms context mean/std), class-weighted.
+CRNN: 4 conv blocks + bidirectional GRU, frame-wise output, SpecAugment-lite, 30 epochs.
+Decision threshold tuned on an inner validation split of TRAINING data only.
+
+EVALUATION PROTOCOLS
+official : authors' train/test split from files.csv
+grouped  : 5-fold GroupKFold by recording prefix (N in N_x), so no recording is in both train and test
+2 random seeds each.
+
+KEY RESULTS (mean +/- SD)
+                         Frame F1        Event F1        Event recall   AUROC
+Official  LightGBM       0.778 +/- 0.005 0.696 +/- 0.002 0.639          0.976
+Official  CRNN           0.793 +/- 0.003 0.714 +/- 0.000 0.619          0.989
+Grouped   LightGBM       0.745 +/- 0.017 0.680 +/- 0.026 0.632          0.967
+Grouped   CRNN           0.805 +/- 0.026 0.703 +/- 0.023 0.621          0.985
+
+LEAKAGE FINDING
+In the authors' split, 282 of 321 test clips (88%) come from recordings that also appear in training
+(183 of 208 test recordings). Under leak-free grouped evaluation LightGBM drops (frame F1 0.778 -> 0.745)
+while the CRNN holds (~0.80), so the CRNN generalises better across recordings.
+
+LIMITATIONS
+- Dataset has no subject IDs; "grouped by recording prefix" is the strictest split possible until the
+  authors share a file-to-subject mapping (requested by email 21 Oct 2026).
+- Recall is the weak point: ~38% of bowel sounds missed at the chosen thresholds.
+
+FILES
+results_all.csv              every model x split x seed with all metrics
+phase1_results_summary.csv   mean/SD table
+official_split_leakage.json  leakage counts
+protocol_comparison.png      chart (recreated from results_all.csv)
+train_bowel.py               exact training/evaluation code
+run_log.txt                  training log
+Example-detection plot (crnn_examples.png) and trained CRNN weights remain in the Kaggle notebook's Output tab.
